@@ -1,0 +1,20 @@
+{
+  "name": "pulsedesk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack AI customer support automation platform built with MERN.",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace server\" \"npm run dev --workspace client\"",
+    "install:all": "npm install --workspaces",
+    "build": "npm run build --workspace client",
+    "start": "npm run start --workspace server",
+    "lint": "npm run lint --workspace client"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
