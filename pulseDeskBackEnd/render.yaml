@@ -2,7 +2,7 @@ services:
   - type: web
     name: pulsedesk-api
     env: node
-    rootDir: server
+    rootDir: pulseDeskBackEnd
     buildCommand: npm install
     startCommand: npm start
     envVars:
@@ -22,3 +22,19 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+
+  - type: static
+    name: pulsedesk-client
+    env: static
+    rootDir: pulseDeskFrontEnd
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    headers:
+      - path: /*
+        headers:
+          - key: Cache-Control
+            value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
