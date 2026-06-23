@@ -3,12 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { http } from "../api/http";
 import { TicketCard } from "../components/TicketCard";
 import { useSocket } from "../hooks/useSocket";
+import { useAuth } from "../context/AuthContext";
 
 export const Tickets = () => {
   const socket = useSocket();
+  const { user, isStaff } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
+  const [assignment, setAssignment] = useState("");
 
   useEffect(() => {
     http.get("/tickets").then(({ data }) => setTickets(data.tickets));
@@ -30,9 +33,19 @@ export const Tickets = () => {
       tickets.filter((ticket) => {
         const matchesQuery = `${ticket.title} ${ticket.description}`.toLowerCase().includes(query.toLowerCase());
         const matchesStatus = !status || ticket.status === status;
-        return matchesQuery && matchesStatus;
+        
+        let matchesAssignment = true;
+        if (isStaff && assignment) {
+          if (assignment === "assigned") {
+            matchesAssignment = ticket.assignedTo?._id === user?._id;
+          } else if (assignment === "unassigned") {
+            matchesAssignment = !ticket.assignedTo;
+          }
+        }
+
+        return matchesQuery && matchesStatus && matchesAssignment;
       }),
-    [tickets, query, status]
+    [tickets, query, status, assignment, isStaff, user]
   );
 
   return (
@@ -50,6 +63,13 @@ export const Tickets = () => {
           <option value="resolved">Resolved</option>
           <option value="closed">Closed</option>
         </select>
+        {isStaff && (
+          <select className="focus-ring border border-line bg-white px-3 py-2" value={assignment} onChange={(event) => setAssignment(event.target.value)}>
+            <option value="">All tickets</option>
+            <option value="assigned">Assigned to me</option>
+            <option value="unassigned">Unassigned</option>
+          </select>
+        )}
       </div>
       <div className="space-y-3">
         {filtered.map((ticket) => <TicketCard key={ticket._id} ticket={ticket} />)}

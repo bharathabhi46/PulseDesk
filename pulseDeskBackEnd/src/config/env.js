@@ -14,6 +14,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: process.env.PORT || 5000,
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  backendUrl: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/pulsedesk",
   jwtSecret: process.env.JWT_SECRET || "dev-only-secret",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",

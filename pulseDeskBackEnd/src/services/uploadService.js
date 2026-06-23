@@ -1,4 +1,6 @@
 import { Readable } from "stream";
+import fs from "fs/promises";
+import path from "path";
 import cloudinary from "../config/cloudinary.js";
 import { env } from "../config/env.js";
 
@@ -26,13 +28,25 @@ export const uploadFiles = async (files = []) => {
   const cloudinaryReady = env.cloudinary.cloudName && env.cloudinary.apiKey && env.cloudinary.apiSecret;
 
   if (!cloudinaryReady) {
-    return files.map((file) => ({
-      url: `local-placeholder://${file.originalname}`,
-      publicId: null,
-      resourceType: file.mimetype,
-      originalName: file.originalname,
-      size: file.size
-    }));
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    await fs.mkdir(uploadDir, { recursive: true });
+
+    const uploadedList = [];
+    for (const file of files) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+      const filePath = path.join(uploadDir, filename);
+      await fs.writeFile(filePath, file.buffer);
+
+      const cleanBaseUrl = env.backendUrl.endsWith("/") ? env.backendUrl.slice(0, -1) : env.backendUrl;
+      uploadedList.push({
+        url: `${cleanBaseUrl}/uploads/${filename}`,
+        publicId: filename,
+        resourceType: file.mimetype,
+        originalName: file.originalname,
+        size: file.size
+      });
+    }
+    return uploadedList;
   }
 
   const results = await Promise.all(files.map(uploadBuffer));

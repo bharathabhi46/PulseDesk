@@ -10,3 +10,5 @@ yarn-error.log*
 coverage
 .vercel
 .render
+.env.production
+.env.development

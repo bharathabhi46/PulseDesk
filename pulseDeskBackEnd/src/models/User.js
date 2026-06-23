@@ -16,13 +16,16 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 8, select: false },
     role: {
       type: String,
-      enum: ["admin", "agent", "customer"],
+      enum: ["superadmin", "admin", "manager", "agent", "customer"],
       default: "customer"
     },
     avatarUrl: String,
     department: String,
     isActive: { type: Boolean, default: true },
-    lastSeenAt: Date
+    lastSeenAt: Date,
+    refreshToken: { type: String, select: false },
+    passwordResetToken: String,
+    passwordResetExpires: Date
   },
   { timestamps: true }
 );
@@ -40,7 +43,14 @@ userSchema.methods.comparePassword = function comparePassword(candidate) {
 userSchema.methods.toSafeObject = function toSafeObject() {
   const user = this.toObject();
   delete user.password;
+  delete user.refreshToken;
+  delete user.passwordResetToken;
+  delete user.passwordResetExpires;
   return user;
 };
+
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ email: 1 });
 
 export default mongoose.model("User", userSchema);

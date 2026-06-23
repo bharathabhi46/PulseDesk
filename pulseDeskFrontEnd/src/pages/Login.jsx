@@ -24,7 +24,14 @@ export const Login = () => {
     <AuthScreen title="Welcome back" subtitle="Sign in to manage tickets, chat, and AI support workflows.">
       <form onSubmit={submit} className="space-y-4">
         <Input label="Email" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} />
-        <Input label="Password" type="password" value={form.password} onChange={(password) => setForm({ ...form, password })} />
+        <div>
+          <Input label="Password" type="password" value={form.password} onChange={(password) => setForm({ ...form, password })} />
+          <div className="mt-1 flex justify-end">
+            <Link className="text-xs font-medium text-ink/50 hover:text-ink transition" to="/forgot-password">
+              Forgot password?
+            </Link>
+          </div>
+        </div>
         {error && <p className="border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         <button className="focus-ring flex w-full items-center justify-center gap-2 bg-ink px-4 py-3 font-semibold text-white">
           Sign in

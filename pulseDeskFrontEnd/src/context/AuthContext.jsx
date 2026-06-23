@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }) => {
         setUser(data.user);
       } catch {
         localStorage.removeItem("pulsedesk_token");
+        localStorage.removeItem("pulsedesk_refresh_token");
         setToken(null);
       } finally {
         setLoading(false);
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (payload) => {
     const { data } = await http.post("/auth/login", payload);
     localStorage.setItem("pulsedesk_token", data.token);
+    localStorage.setItem("pulsedesk_refresh_token", data.refreshToken);
     setToken(data.token);
     setUser(data.user);
     return data.user;
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const signup = async (payload) => {
     const { data } = await http.post("/auth/signup", payload);
     localStorage.setItem("pulsedesk_token", data.token);
+    localStorage.setItem("pulsedesk_refresh_token", data.refreshToken);
     setToken(data.token);
     setUser(data.user);
     return data.user;
@@ -45,12 +48,21 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("pulsedesk_token");
+    localStorage.removeItem("pulsedesk_refresh_token");
     setToken(null);
     setUser(null);
   };
 
   const value = useMemo(
-    () => ({ user, token, loading, login, signup, logout, isStaff: ["admin", "agent"].includes(user?.role) }),
+    () => ({
+      user,
+      token,
+      loading,
+      login,
+      signup,
+      logout,
+      isStaff: ["superadmin", "admin", "manager", "agent"].includes(user?.role)
+    }),
     [user, token, loading]
   );
 

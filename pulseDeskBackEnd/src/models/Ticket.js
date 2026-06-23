@@ -51,5 +51,8 @@ const ticketSchema = new mongoose.Schema(
 
 ticketSchema.index({ title: "text", description: "text", tags: "text" });
 ticketSchema.index({ status: 1, priority: 1, assignedTo: 1 });
+ticketSchema.index({ customer: 1 });
+ticketSchema.index({ createdAt: -1 });
+ticketSchema.index({ updatedAt: -1 });
 
 export default mongoose.model("Ticket", ticketSchema);

@@ -6,4 +6,9 @@ export const signToken = (user) =>
     expiresIn: env.jwtExpiresIn
   });
 
+export const signRefreshToken = (user) =>
+  jwt.sign({ id: user._id }, env.jwtSecret, {
+    expiresIn: "30d"
+  });
+
 export const verifyToken = (token) => jwt.verify(token, env.jwtSecret);

@@ -36,9 +36,9 @@ export const createTicket = asyncHandler(async (req, res) => {
     attachments
   });
 
-  const adminsAndAgents = await User.find({ role: { $in: ["admin", "agent"] } });
+  const staff = await User.find({ role: { $in: ["superadmin", "admin", "manager", "agent"] } });
   await Notification.insertMany(
-    adminsAndAgents.map((user) => ({
+    staff.map((user) => ({
       user: user._id,
       title: "New support ticket",
       body: ticket.title,
@@ -67,7 +67,7 @@ export const getTicket = asyncHandler(async (req, res) => {
   if (!ticket) throw new ApiError(404, "Ticket not found");
 
   const canView =
-    req.user.role === "admin" ||
+    ["superadmin", "admin", "manager"].includes(req.user.role) ||
     String(ticket.customer._id) === String(req.user._id) ||
     String(ticket.assignedTo?._id) === String(req.user._id) ||
     (req.user.role === "agent" && !ticket.assignedTo);
@@ -85,7 +85,7 @@ export const updateTicket = asyncHandler(async (req, res) => {
   const ticket = await Ticket.findById(req.params.id);
   if (!ticket) throw new ApiError(404, "Ticket not found");
 
-  const allowed = ["status", "priority", "category", "assignedTo", "tags"];
+  const allowed = ["status", "priority", "category", "tags"];
   allowed.forEach((field) => {
     if (req.body[field] !== undefined) ticket[field] = req.body[field];
   });
@@ -114,8 +114,17 @@ export const assignTicket = asyncHandler(async (req, res) => {
   const ticket = await Ticket.findById(req.params.id);
   if (!ticket) throw new ApiError(404, "Ticket not found");
 
-  const agent = await User.findOne({ _id: req.body.agentId, role: { $in: ["agent", "admin"] } });
-  if (!agent) throw new ApiError(400, "Assigned user must be an agent or admin");
+  if (!req.body.agentId) {
+    ticket.assignedTo = null;
+    await ticket.save();
+    const populated = await ticket.populate(ticketPopulate);
+    req.io?.to(`ticket:${ticket._id}`).emit("ticket:updated", populated);
+    req.io?.to("staff").emit("ticket:updated", populated);
+    return res.json({ success: true, ticket: populated });
+  }
+
+  const agent = await User.findOne({ _id: req.body.agentId, role: { $in: ["superadmin", "admin", "manager", "agent"] } });
+  if (!agent) throw new ApiError(400, "Assigned user must be a staff member");
 
   ticket.assignedTo = agent._id;
   ticket.status = ticket.status === "open" ? "in_progress" : ticket.status;
@@ -136,6 +145,7 @@ export const assignTicket = asyncHandler(async (req, res) => {
   });
 
   const populated = await ticket.populate(ticketPopulate);
+  req.io?.to(`ticket:${ticket._id}`).emit("ticket:updated", populated);
   req.io?.to("staff").emit("ticket:updated", populated);
   res.json({ success: true, ticket: populated });
 });

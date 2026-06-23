@@ -31,6 +31,8 @@ export const createApp = (io) => {
     next();
   });
 
+  app.use("/uploads", express.static("public/uploads"));
+
   app.get("/health", (_req, res) => res.json({ ok: true, service: "PulseDesk API" }));
   app.use("/api/auth", authRoutes);
   app.use("/api/tickets", ticketRoutes);

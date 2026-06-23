@@ -7,10 +7,17 @@ export const notFound = (req, _res, next) => {
 };
 
 export const errorHandler = (err, _req, res, _next) => {
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
+  let message = err.message || "Internal server error";
+
+  if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+    statusCode = 401;
+    message = err.name === "TokenExpiredError" ? "Authentication token has expired" : "Invalid authentication token";
+  }
+
   const payload = {
     success: false,
-    message: err.message || "Internal server error"
+    message
   };
 
   if (err.details) payload.details = err.details;

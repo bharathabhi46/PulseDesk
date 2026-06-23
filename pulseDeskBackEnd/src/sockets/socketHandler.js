@@ -1,7 +1,7 @@
 import { verifyToken } from "../utils/jwt.js";
 import User from "../models/User.js";
-import Message from "../models/Message.js";
 import Ticket from "../models/Ticket.js";
+import { executeMessageCreation } from "../controllers/messageController.js";
 
 export const registerSocketHandlers = (io) => {
   io.use(async (socket, next) => {
@@ -20,7 +20,10 @@ export const registerSocketHandlers = (io) => {
 
   io.on("connection", (socket) => {
     socket.join(`user:${socket.user._id}`);
-    if (["admin", "agent"].includes(socket.user.role)) socket.join("staff");
+    
+    // Support expanded staff roles
+    const isStaff = ["superadmin", "admin", "manager", "agent"].includes(socket.user.role);
+    if (isStaff) socket.join("staff");
 
     socket.on("ticket:join", async (ticketId) => {
       const ticket = await Ticket.findById(ticketId);
@@ -40,16 +43,18 @@ export const registerSocketHandlers = (io) => {
 
     socket.on("message:send", async ({ ticketId, body }) => {
       if (!body?.trim()) return;
-      const ticket = await Ticket.findById(ticketId);
-      if (!ticket) return;
-      const message = await Message.create({
-        ticket: ticketId,
-        sender: socket.user._id,
-        body: body.trim(),
-        readBy: [socket.user._id]
-      });
-      const populated = await message.populate("sender", "name email role avatarUrl");
-      io.to(`ticket:${ticketId}`).emit("message:created", populated);
+      try {
+        await executeMessageCreation({
+          ticketId,
+          sender: socket.user,
+          body: body.trim(),
+          attachments: [],
+          isInternal: false,
+          io
+        });
+      } catch (err) {
+        console.error("Socket message error:", err.message);
+      }
     });
   });
 };
