@@ -1,6 +1,7 @@
 services:
   - type: web
     name: pulsedesk-api
+    plan: free
     env: node
     rootDir: pulseDeskBackEnd
     buildCommand: npm install
@@ -25,6 +26,7 @@ services:
 
   - type: web
     name: pulsedesk-client
+    plan: free
     runtime: static
     rootDir: pulseDeskFrontEnd
     buildCommand: npm install && npm run build
