@@ -23,12 +23,12 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-  - type: static
+  - type: web
     name: pulsedesk-client
-    env: static
+    runtime: static
     rootDir: pulseDeskFrontEnd
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     headers:
       - path: /*
         headers:
